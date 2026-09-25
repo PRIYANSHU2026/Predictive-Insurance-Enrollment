@@ -1,14 +1,18 @@
-# 🏥 Predicting Insurance Enrollment
-
 <div align="center">
 
-**A production-grade machine learning pipeline that predicts whether an employee will opt in to a voluntary insurance product based on demographic and employment data.**
+# 🏥 Predicting Insurance Enrollment
 
-[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://python.org)
-[![scikit-learn](https://img.shields.io/badge/scikit--learn-1.7-F7931E?logo=scikit-learn&logoColor=white)](https://scikit-learn.org)
-[![MLflow](https://img.shields.io/badge/MLflow-2.22-0194E2?logo=mlflow&logoColor=white)](https://mlflow.org)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.139-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
-[![Tests](https://img.shields.io/badge/Tests-21%20Passed-10b981?logo=pytest&logoColor=white)](#testing)
+**A production-grade machine learning pipeline predicting employee opt-ins for voluntary insurance products.**
+
+[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
+[![scikit-learn](https://img.shields.io/badge/scikit--learn-1.7-F7931E?style=for-the-badge&logo=scikit-learn&logoColor=white)](https://scikit-learn.org)
+[![MLflow](https://img.shields.io/badge/MLflow-2.22-0194E2?style=for-the-badge&logo=mlflow&logoColor=white)](https://mlflow.org)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.139-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+[![Tests](https://img.shields.io/badge/Tests-21%20Passed-10b981?style=for-the-badge&logo=pytest&logoColor=white)](#testing)
+
+<br/>
+
+*From raw demographic and employment data to a deployed production REST API.*
 
 </div>
 
@@ -93,29 +97,46 @@ Predicting-Insurance-Enrollment/
 
 ## 🔄 Overall Workflow
 
-The project follows a structured end-to-end ML lifecycle from raw data to deployed predictions:
+The project follows a structured end-to-end ML lifecycle from raw data to deployed predictions. The workflow is divided into three major stages: **Ingestion**, **Modeling**, and **Deployment**.
 
 ```mermaid
-flowchart LR
-    A["📥 Raw CSV\n10K rows"] --> B["⚙️ Load & Validate\nSchema checks"] --> C["🧹 Clean\nDrop IDs, impute nulls"] --> D["✂️ Split\n80/20 stratified"]
-    D --> E["🔧 Preprocess\nScaler + OneHot"] --> F["🔍 Tune\nRandomizedSearchCV\n5-fold CV"] --> G["🏋️ Train\nLogReg · RF · LGBM"]
-    G --> H["🏆 Champion\nBest CV ROC-AUC"] --> I["💾 Save\nbest_model.joblib"]
-    G --> J["📊 MLflow\nParams · Metrics · Artifacts"]
-    I --> K["🌐 FastAPI\n/predict · /batch"] --> L["✅ Pydantic\nEnum validation"] --> M["📤 Response\nenrolled: 0/1 + prob"]
+flowchart TD
+    subgraph INGESTION ["📥 Data Ingestion & Preprocessing"]
+        direction LR
+        A("Raw CSV<br>10K rows") --> B("Load & Validate<br>Schema checks")
+        B --> C("Clean Data<br>Impute & Format")
+        C --> D("Split Data<br>80/20 Stratified")
+    end
 
-    style A fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
-    style B fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
-    style C fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
-    style D fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
-    style E fill:#1a3a2a,stroke:#10b981,color:#e2e8f0
-    style F fill:#1a3a2a,stroke:#10b981,color:#e2e8f0
-    style G fill:#1a3a2a,stroke:#10b981,color:#e2e8f0
-    style H fill:#1a3a2a,stroke:#10b981,color:#e2e8f0
-    style I fill:#3a2a1a,stroke:#f59e0b,color:#e2e8f0
-    style J fill:#3a2a1a,stroke:#f59e0b,color:#e2e8f0
-    style K fill:#2a1a3a,stroke:#8b5cf6,color:#e2e8f0
-    style L fill:#2a1a3a,stroke:#8b5cf6,color:#e2e8f0
-    style M fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+    subgraph MODELING ["🧠 Modeling & Tuning"]
+        direction LR
+        D --> E("Preprocess<br>Scaler & OHE")
+        E --> F("Hyperparameter Tuning<br>RandomizedSearchCV")
+        F --> G{"Train Models"}
+        G --> |"LogReg"| H("Evaluate")
+        G --> |"RandomForest"| H
+        G --> |"LightGBM"| H
+    end
+
+    subgraph DEPLOYMENT ["🚀 Deployment & Serving"]
+        direction LR
+        H --> I["🏆 Champion Model"]
+        I --> J[("💾 Save to .joblib")]
+        I --> K[("📊 MLflow Tracking")]
+        J --> L("🌐 FastAPI Service")
+        L --> M("✅ Pydantic Validation")
+        M --> N("📤 JSON Response")
+    end
+
+    classDef stage1 fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#f8fafc,rx:5,ry:5;
+    classDef stage2 fill:#064e3b,stroke:#10b981,stroke-width:2px,color:#f8fafc,rx:5,ry:5;
+    classDef stage3 fill:#4c1d95,stroke:#8b5cf6,stroke-width:2px,color:#f8fafc,rx:5,ry:5;
+    classDef highlight fill:#b45309,stroke:#f59e0b,stroke-width:2px,color:#f8fafc,rx:5,ry:5;
+
+    class A,B,C,D stage1;
+    class E,F,G,H stage2;
+    class I highlight;
+    class J,K,L,M,N stage3;
 ```
 
 ### Step-by-Step Breakdown
@@ -136,48 +157,45 @@ flowchart LR
 
 ## 🧬 ML Pipeline Workflow
 
-A detailed view of the machine learning pipeline internals:
+A detailed view of the robust scikit-learn pipeline architecture that prevents data leakage and ensures reproducible modeling:
 
 ```mermaid
-flowchart LR
-    subgraph PIPELINE["sklearn Pipeline"]
+flowchart TD
+    subgraph PIPELINE["⚙️ Pipeline Architecture (scikit-learn)"]
+        direction TB
+        
+        subgraph PREPROCESS["🔄 Data Transformation (ColumnTransformer)"]
+            direction LR
+            N["🔢 Numerical<br/>age, salary, tenure_years"] -.-> SS["StandardScaler<br/>(zero mean, unit variance)"]
+            C["📝 Categorical<br/>gender, region, etc."] -.-> OHE["OneHotEncoder<br/>(drop='if_binary')"]
+        end
+
+        subgraph MODEL["🤖 Model Search & Tuning"]
+            direction LR
+            SS & OHE --> TUNE["RandomizedSearchCV<br/>(n_iter=30, cv=5)"]
+            TUNE --> LR2["Logistic Regression"]
+            TUNE --> RF2["Random Forest"]
+            TUNE --> LGBM2["LightGBM"]
+        end
+    end
+    
+    subgraph METRICS["📊 Evaluation"]
         direction LR
-        subgraph PREPROCESS["ColumnTransformer"]
-            direction TB
-            N["🔢 Numerical<br/>age, salary, tenure_years"]
-            C["📝 Categorical<br/>gender, marital_status,<br/>employment_type, region,<br/>has_dependents"]
-            N --> SS["StandardScaler<br/><i>zero mean, unit variance</i>"]
-            C --> OHE["OneHotEncoder<br/><i>handle_unknown='ignore'<br/>drop='if_binary'</i>"]
-        end
-
-        subgraph TUNING["Hyperparameter Search"]
-            direction TB
-            RS["RandomizedSearchCV<br/><i>n_iter=30, cv=5</i>"]
-            RS --> LR["LogisticRegression<br/><i>C ∈ {0.001..100}</i>"]
-            RS --> RF["RandomForestClassifier<br/><i>n_estimators ∈ {100..500}<br/>max_depth ∈ {5..20, None}</i>"]
-            RS --> LG["LGBMClassifier<br/><i>learning_rate ∈ {0.01..0.2}<br/>num_leaves ∈ {15..127}</i>"]
-        end
-
-        SS --> RS
-        OHE --> RS
+        LR2 & RF2 & LGBM2 --> EVAL["ROC-AUC<br/>F1-Score<br/>Accuracy"]
+        EVAL --> CM["Confusion Matrix"]
+        EVAL --> CR["Classification Report"]
     end
-
-    subgraph EVAL["Evaluation"]
-        M["Metrics<br/>Accuracy, Precision,<br/>Recall, F1, ROC-AUC"]
-        CM["Confusion Matrix"]
-        CR["Classification Report"]
-    end
-
-    LR --> M
-    RF --> M
-    LG --> M
-    M --> CM
-    M --> CR
-
-    style PIPELINE fill:#1e293b,stroke:#6366f1,color:#e2e8f0
-    style PREPROCESS fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
-    style TUNING fill:#1a3a2a,stroke:#10b981,color:#e2e8f0
-    style EVAL fill:#3a2a1a,stroke:#f59e0b,color:#e2e8f0
+    
+    classDef default fill:#1e293b,stroke:#475569,stroke-width:1px,color:#f8fafc;
+    classDef pipeline fill:#0f172a,stroke:#3b82f6,stroke-width:2px;
+    classDef preproc fill:#022c22,stroke:#10b981,stroke-width:2px;
+    classDef model fill:#3b0764,stroke:#a855f7,stroke-width:2px;
+    classDef eval fill:#78350f,stroke:#d97706,stroke-width:2px;
+    
+    class PIPELINE pipeline;
+    class PREPROCESS preproc;
+    class MODEL model;
+    class METRICS,EVAL,CM,CR eval;
 ```
 
 ### Why This Design?
